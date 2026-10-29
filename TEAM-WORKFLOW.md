@@ -36,3 +36,6 @@ Onno keu ei file-e kichu lagle malik-ke bolbe, ba khub chhoto change kore alada 
 
 Commit message: `feat:` notun jinish, `fix:` bug, `style:` CSS, `docs:` lekha, `refactor:` gochano.
 `.env` kokhono commit korben na.
+
+## Members
+Member 1: Sumaia Sultana
