@@ -1,0 +1,177 @@
+// EventEase database (MySQL). After editing run: npx prisma migrate dev --name what_changed
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  organizer   // the normal "user": requests events, then manages the approved ones
+  guest
+}
+
+enum RequestStatus {
+  pending
+  approved
+  rejected
+}
+
+enum RequestSource {
+  custom
+  ai
+}
+
+enum Rsvp {
+  pending
+  accepted
+  declined
+}
+
+enum Attendance {
+  pending
+  present
+  absent
+}
+
+enum Priority {
+  low
+  medium
+  high
+}
+
+enum Category {
+  venue
+  food
+  decoration
+  transportation
+  misc
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String   // bcrypt hash, never the real password
+  role      Role     @default(organizer)
+  createdAt DateTime @default(now())
+  events    Event[]
+  requests  EventRequest[]
+
+  // preferences the user gives so AI can suggest events
+  prefBudgetMin Float?
+  prefBudgetMax Float?
+  prefGuests    Int?
+  prefTypes     String? @db.VarChar(255) // comma separated: "Wedding,Concert"
+  prefCity      String?
+  prefVibe      String?
+}
+
+// A user asks the admin for an event. When the admin approves, a real Event is created for that user.
+model EventRequest {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  type        String
+  date        String        @db.VarChar(10)
+  time        String        @db.VarChar(5)
+  venue       String
+  guests      Int
+  budget      Float
+  description String?       @db.Text
+  source      RequestSource @default(custom)
+  status      RequestStatus @default(pending)
+  adminNote   String?       @db.Text
+  eventId     String?       // filled when approved
+  createdAt   DateTime      @default(now())
+  reviewedAt  DateTime?
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Event {
+  id             String     @id @default(cuid())
+  ownerId        String
+  owner          User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name           String
+  type           String
+  date           String     @db.VarChar(10) // "2026-12-20"
+  time           String     @db.VarChar(5)  // "18:00"
+  venue          String
+  guests         Int
+  budget         Float
+  description    String?    @db.Text
+  organizerName  String?
+  organizerPhone String?
+  allocVenue          Float @default(0)
+  allocFood           Float @default(0)
+  allocDecoration     Float @default(0)
+  allocTransportation Float @default(0)
+  allocMisc           Float @default(0)
+  createdAt      DateTime   @default(now())
+  guestList      Guest[]
+  tasks          Task[]
+  activities     Activity[]
+  expenses       Expense[]
+
+  @@index([ownerId])
+}
+
+model Guest {
+  id         String     @id @default(cuid())
+  eventId    String
+  event      Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name       String
+  email      String     // stored in lowercase; a guest sees the invitation by logging in with this email
+  phone      String?
+  rsvp       Rsvp       @default(pending)
+  attendance Attendance @default(pending)
+  createdAt  DateTime   @default(now())
+
+  @@index([eventId])
+  @@index([email])
+}
+
+model Task {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  title     String
+  deadline  String   @db.VarChar(10)
+  done      Boolean  @default(false)
+  priority  Priority @default(medium)
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  title     String
+  date      String   @db.VarChar(10)
+  time      String   @db.VarChar(5)
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+}
+
+model Expense {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  title     String
+  category  Category
+  amount    Float
+  date      String   @db.VarChar(10)
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+}
