@@ -64,7 +64,7 @@ export default function AdminRequests() {
         <div className="tabs">
           {TABS.map(([k, l]) => <button key={k} className={'tab' + (tab === k ? ' on' : '')} onClick={() => setTab(k)}>{l}<em>{count(k)}</em></button>)}
         </div>
-        <div className="search-box grow"><Icon name="search" /><input type="search" placeholder="Search event, user, email or venue" aria-label="Search requests" value={q} onChange={e => setQ(e.target.value)} /></div>
+        <div className="search-box grow"><Icon name="search" /><input type="search" placeholder="Search by event name, user, email or venue" aria-label="Search requests" value={q} onChange={e => setQ(e.target.value)} /></div>
       </div>
 
       {list === null && <p className="muted">Loading...</p>}
