@@ -51,7 +51,7 @@ export default function Requests() {
       </div>
 
       {list === null && <p className="muted">Loading...</p>}
-      {list && list.length === 0 && <EmptyState title="No requests yet" text="Pick one of our ideas or send your own. Our team will review it." to="/discover" label="Discover events" />}
+      {list && list.length === 0 && <EmptyState title="No requests yet" text="Pick one of our ideas or send your own. Our admin team will review it and reply soon" to="/discover" label="Discover events" />}
 
       <div className="rows">
         {shown.map((r, i) => (
